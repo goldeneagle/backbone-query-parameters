@@ -46,11 +46,14 @@ _.extend(Backbone.History.prototype, {
   }
 });
 
+  var prevConstructor = Backbone.Router.prototype.constructor;
+
 _.extend(Backbone.Router.prototype, {
-  initialize: function(options) {
+  constructor: function(options){
     this.encodedSplatParts = options && options.encodedSplatParts;
+  prevConstructor.call(this, options);
   },
-  
+
   getFragment : function(fragment, forcePushState, excludeQueryString) {
     fragment = _getFragment.apply(this, arguments);
     if (excludeQueryString) {
@@ -118,7 +121,7 @@ _.extend(Backbone.Router.prototype, {
 
     for (var i=0; i<length; i++) {
       if (_.isString(params[i])) {
-        params[i] = decodeURIComponent(params[i]);
+        params[i] = decodeURIComponent(params[i].replace(/\+/g, '%20'));
       }
     }
 
@@ -158,13 +161,13 @@ _.extend(Backbone.Router.prototype, {
         if (!values[i]) {
           values.splice(i, 1);
         } else {
-          values[i] = decodeURIComponent(values[i]);
+          values[i] = decodeURIComponent(values[i].replace(/\+/g, '%20'));
         }
       }
       return values;
     }
     if (!currentValue) {
-      return decodeURIComponent(value);
+      return decodeURIComponent(value.replace(/\+/g, '%20'));
     } else if (_.isArray(currentValue)) {
       currentValue.push(value);
       return currentValue;
@@ -202,7 +205,7 @@ _.extend(Backbone.Router.prototype, {
         // primitave type
         _val = this._toQueryParam(_val);
         if (_.isBoolean(_val) || _val) {
-          rtn += (rtn ? '&' : '') + this._toQueryParamName(name, namePrefix) + '=' + encodeSplit(encodeURIComponent(_val));
+          rtn += (rtn ? '&' : '') + this._toQueryParamName(name, namePrefix) + '=' + encodeSplit(encodeURIComponent(_val).replace(/%20/g, '+'));
         }
       } else if (_.isArray(_val)) {
         // arrrays use Backbone.Router.arrayValueSplit separator
